@@ -1,8 +1,11 @@
+#ifndef FRACTION
+#define FRACTION
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
 #include <functional>
+
 
 using namespace std;
 
@@ -74,3 +77,5 @@ namespace ariel{
 
     };
 }
+
+#endif
