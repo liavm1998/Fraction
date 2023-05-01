@@ -37,135 +37,131 @@ namespace ariel{
         return Fraction(this->numerator*mult_by,base);
     }
 
-    bool boolean_calc(Fraction a, Fraction b, const LogicalOperator& oper){
-        int base = lcm(a.denominator,b.denominator);
-        int extended_a = a.extend_to_base(base).numerator;
-        int extended_b = b.extend_to_base(base).numerator;
-        return oper(extended_a,extended_b);
-    }
     // binary with fraction
-    Fraction Fraction::operator+(Fraction ot){
+    Fraction Fraction::operator+(Fraction other){
 
-        int base = lcm(this->denominator,ot.denominator);
+        int base = lcm(this->denominator,other.denominator);
 
         Fraction extended_self = this->extend_to_base(base);
-        Fraction extended_ot = ot.extend_to_base(base);
-        if (!overflowCheck(extended_self.numerator,extended_ot.numerator,"ADD") 
-            ||!overflowCheck(extended_self.denominator,extended_ot.denominator,"ADD")){
+        Fraction extended_other = other.extend_to_base(base);
+        if (!overflowCheck(extended_self.numerator,extended_other.numerator,"ADD") 
+            ||!overflowCheck(extended_self.denominator,extended_other.denominator,"ADD")){
                 throw overflow_error("");
             }
-        return Fraction(extended_self.numerator+extended_ot.numerator,base).reduced_form();
+        return Fraction(extended_self.numerator+extended_other.numerator,base).reduced_form();
     };
 
-    Fraction Fraction::operator-(Fraction ot){
+    Fraction Fraction::operator-(Fraction other){
         cout << "this : " << *this <<endl;
-        cout << "ot : " << ot <<endl;
-        cout << "ot.numerator * -1 : " << ot.numerator *-1 <<endl;
-        Fraction reduced_ot = ot.reduced_form();
+        cout << "other : " << other <<endl;
+        cout << "other.numerator * -1 : " << other.numerator *-1 <<endl;
+        Fraction reduced_other = other.reduced_form();
         if(this->numerator > 0 &&
-         reduced_ot.numerator != 0 &&
-         reduced_ot.numerator *-1 == reduced_ot.numerator){
+         reduced_other.numerator != 0 &&
+         reduced_other.numerator *-1 == reduced_other.numerator){
             throw overflow_error("");
         }
-        return *this + Fraction(-1 * ot.numerator,ot.denominator);
+        return *this + Fraction(-1 * other.numerator,other.denominator);
     };
-    Fraction Fraction::operator/(Fraction ot){
-        if(ot.numerator == 0){
+    Fraction Fraction::operator/(Fraction other){
+        if(other.numerator == 0){
             throw std::runtime_error("");
         }
-        return *this * Fraction(ot.denominator,ot.numerator);
+        return *this * Fraction(other.denominator,other.numerator);
     };
-    Fraction Fraction::operator*(Fraction ot){
-        // Fraction sw1= Fraction(ot.numerator,this->denominator).reduced_form();
-        // Fraction sw2= Fraction(this->numerator,ot.denominator).reduced_form();
+    Fraction Fraction::operator*(Fraction other){
+        // Fraction sw1= Fraction(other.numerator,this->denominator).reduced_form();
+        // Fraction sw2= Fraction(this->numerator,other.denominator).reduced_form();
         // return Fraction(sw1.numerator*sw2.numerator, sw1.denominator*sw2.denominator).reduced_form();
         Fraction reduced_self= this->reduced_form();
-        Fraction reduced_ot= ot.reduced_form();
-        if (!overflowCheck(reduced_self.numerator,reduced_ot.numerator,"MUL") ||
-            !overflowCheck(reduced_self.denominator,reduced_ot.denominator,"MUL")){
+        Fraction reduced_other= other.reduced_form();
+        if (!overflowCheck(reduced_self.numerator,reduced_other.numerator,"MUL") ||
+            !overflowCheck(reduced_self.denominator,reduced_other.denominator,"MUL")){
             throw overflow_error("");
         }
-        return Fraction(reduced_self.numerator*reduced_ot.numerator,
-        reduced_self.denominator*reduced_ot.denominator).reduced_form();
+        return Fraction(reduced_self.numerator*reduced_other.numerator,
+        reduced_self.denominator*reduced_other.denominator).reduced_form();
     };
 
     //bool fraction
-    bool Fraction::operator>(Fraction ot) const{
-        return boolean_calc(*this,ot,Bigger());
-    };
-    bool Fraction::operator==(Fraction ot) const{
+    bool Fraction::operator>(Fraction other) const{
         int extended_a = 1000 * ((float)this->numerator/this->denominator);
-        int extended_b = 1000 * ((float)ot.numerator/ot.denominator);
+        int extended_b = 1000 * ((float)other.numerator/other.denominator);
+        return extended_a > extended_b;
+    };
+    bool Fraction::operator==(Fraction other) const{
+        int extended_a = 1000 * ((float)this->numerator/this->denominator);
+        int extended_b = 1000 * ((float)other.numerator/other.denominator);
         return extended_a == extended_b;
     };
-    bool Fraction::operator!=(Fraction ot) const{
-        return !(*this==ot);
+    bool Fraction::operator!=(Fraction other) const{
+        return !(*this==other);
     }
-    bool Fraction::operator<(Fraction ot) const{
-        return ot > *this;
+    bool Fraction::operator<(Fraction other) const{
+        return other > *this;
     }
-    bool Fraction::operator>=(Fraction ot) const{
-        return (*this > ot)||(*this == ot);
+    bool Fraction::operator>=(Fraction other) const{
+        return (*this > other)||(*this == other);
     };
-    bool Fraction::operator<=(Fraction ot) const{
-        return ot >= *this;
+    bool Fraction::operator<=(Fraction other) const{
+        return other >= *this;
     };
 
     // float opertator Fraction  
-    Fraction operator*(float a, Fraction f){return f * a;};
-    Fraction operator+(float a, Fraction f){return f + a;};
-    Fraction operator-(float a, Fraction f){
+    Fraction operator*(float num_a, Fraction f){return f * num_a;};
+    Fraction operator+(float num_a, Fraction f){return f + num_a;};
+    Fraction operator-(float num_a, Fraction f){
         cout << f <<endl;
         cout << "heyyyyyy"<<endl;
         Fraction minf = f * -1.0;
         cout << "heyyyyyy"<<endl;
-        return  f*-1 + a;
+        return  f*-1 + num_a;
     };
-    Fraction operator/(float a, Fraction f){return Fraction(f.denominator,f.numerator) * a;};
+    Fraction operator/(float num_a, Fraction f){return Fraction(f.denominator,f.numerator) * num_a;};
     // bool float
-    bool Fraction::operator<(float ot){ return *this<Fraction(ot); };
-    bool Fraction::operator>(float ot){ return *this>Fraction(ot); };
-    bool Fraction::operator<=(float ot){ return *this<=Fraction(ot); };
-    bool Fraction::operator>=(float ot){ return *this>=Fraction(ot); };
-    bool Fraction::operator==(float ot){return *this==Fraction(ot); };
-    bool Fraction::operator!=(float ot){return *this!=Fraction(ot); };
+    bool Fraction::operator<(float other){ return *this<Fraction(other); };
+    bool Fraction::operator>(float other){ return *this>Fraction(other); };
+    bool Fraction::operator<=(float other){ return *this<=Fraction(other); };
+    bool Fraction::operator>=(float other){ return *this>=Fraction(other); };
+    bool Fraction::operator==(float other){return *this==Fraction(other); };
+    bool Fraction::operator!=(float other){return *this!=Fraction(other); };
     
     // float operator fraction
 
-    bool operator>(float a,  Fraction ot){ return Fraction(a) > ot; };
-    bool operator<(float a,  Fraction ot){ return Fraction(a) < ot; };
-    bool operator>=(float a, Fraction ot){ return Fraction(a) >= ot  ; };
-    bool operator==(float a, Fraction ot){ return ot == Fraction(a); };
-    bool operator!=(float a, Fraction ot){ return ot != Fraction(a); };
-    bool operator<=(float a, Fraction ot){ return Fraction(a) <= ot; };
+    bool operator>(float num_a,  Fraction other){ return Fraction(num_a) > other; };
+    bool operator<(float num_a,  Fraction other){ return Fraction(num_a) < other; };
+    bool operator>=(float num_a, Fraction other){ return Fraction(num_a) >= other  ; };
+    bool operator==(float num_a, Fraction other){ return other == Fraction(num_a); };
+    bool operator!=(float num_a, Fraction other){ return other != Fraction(num_a); };
+    bool operator<=(float num_a, Fraction other){ return Fraction(num_a) <= other; };
 
-    ostream& operator<<(ostream& os, const Fraction& f){
-        Fraction reduced_f = f.reduced_form();
-        os << reduced_f.numerator <<'/' << reduced_f.denominator;
-        return os;
+    ostream& operator<<(ostream& osStream, const Fraction& frac){
+        Fraction reduced_f = frac.reduced_form();
+        osStream << reduced_f.numerator <<'/' << reduced_f.denominator;
+        return osStream;
     };
     
 
-    istream& operator>> (istream& in, Fraction &f){
+    istream& operator>> (istream& inStream, Fraction &frac){
         int _num, _den;
-        if(in.peek() == EOF)
+        if(inStream.peek() == EOF)
         {
-            throw std::runtime_error("not a number error");
+            throw std::runtime_error("nother a number error");
         }
-        in >> _num;
-        if(in.peek() == '.'){
+        inStream >> _num;
+        if(inStream.peek() == '.'){
             throw std::runtime_error("floating point error");
         }
-        if(in.peek() == EOF)
+        if(inStream.peek() == EOF)
         {
             throw std::runtime_error("only one number error");
         }
-        in >> _den;
+        inStream >> _den;
         if(_den == 0){
             throw runtime_error("div by zero");
         }
-        f = Fraction(_num,_den);
-        return in;
+        frac = Fraction(_num,_den);
+        return inStream;
     };
     // prefix
     Fraction Fraction::operator++ (){
