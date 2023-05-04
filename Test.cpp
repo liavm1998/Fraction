@@ -234,4 +234,43 @@ TEST_CASE("Fraction class testcase"){
             CHECK(b!=c);
         }
     }
+
+    
+        
+}
+
+
+// special test to impress amosi
+TEST_SUITE("amosyyy"){
+    int smallestUndivisor(int n)
+    {
+        // if divisible by 2
+        if (n % 2 != 0)
+            return 2;
+        // iterate from 3 to sqrt(n)
+        for (int i = 3; i * i <= n; i += 2) {
+            if (n % i != 0)
+                return i;
+        }
+        return n;
+    }
+    TEST_CASE("overflow"){
+        int max_int = std::numeric_limits<int>::max();
+        int min_int = std::numeric_limits<int>::min();
+        Fraction min_num(min_int,1);
+        Fraction min_den(1,min_int);
+        Fraction max_num(max_int,1);
+        Fraction max_den(1,max_int);
+
+        CHECK_THROWS_AS(min_num - 1, std::overflow_error);
+        CHECK_THROWS_AS(max_num + 1, std::overflow_error);
+        CHECK_THROWS_AS(max_den / 2, std::overflow_error);
+        CHECK_THROWS_AS(max_den * min_den, std::overflow_error);
+        int sud = smallestUndivisor(max_int);
+        CHECK_THROWS_AS(max_num / sud, std::overflow_error);
+
+
+        CHECK_NOTHROW(max_num - 1);
+        CHECK_NOTHROW(min_num + 1);
+    }
 }
