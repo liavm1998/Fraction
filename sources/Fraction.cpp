@@ -5,162 +5,127 @@
 using namespace std;
 
 namespace ariel{
-    Fraction::Fraction(){
 
-    }
 
-    Fraction::Fraction(int _numerator,int _denominator){
-        if(_denominator == 0){
+    //constructors
+    Fraction::Fraction():numerator(0),denominator(1){}
+    Fraction::Fraction(int _numerator,int _denominator):numerator(_numerator),denominator(_denominator){
+        if(this->denominator == 0){
             throw invalid_argument("");
         }
-        if(_denominator<0){
-            _numerator*=-1;
-            _denominator*=-1;
-        }
-        this->numerator = _numerator;
-        this->denominator = _denominator;
+        this->reduced_form();
     };
-    Fraction::Fraction(float f){
-        *this = Fraction(round(f*=1000),1000);
-        *this = this->reduced_form();
+    Fraction::Fraction(float f):numerator(round(f*=1000)),denominator(1000){
+        this->reduced_form();
     };
-    //help functions
-    Fraction Fraction::reduced_form() const{
-        if(this->numerator == 0){
-            return Fraction(0,1);
+
+    // help functions 
+    void check_overflow(const Fraction& frac1, const Fraction& frac2, char operation) {
+    if (operation == '+') {
+        if ((frac1.numerator > 0 && frac2.numerator > 0 && frac1.numerator > std::numeric_limits<int>::max() - frac2.numerator) ||
+            (frac1.numerator < 0 && frac2.numerator < 0 && frac1.numerator < std::numeric_limits<int>::min() - frac2.numerator)) {
+            throw std::overflow_error("Integer overflow in addition.");
         }
-        int div_by = gcd(this->numerator,this->denominator);
-        return Fraction(this->numerator/div_by,this->denominator/div_by);
     }
-    Fraction Fraction::extend_to_base(int base) const{
-        double mult_by = base / this->denominator;
-        return Fraction(this->numerator*mult_by,base);
+    else if (operation == '-') {
+        if ((frac1.numerator < 0 && frac2.numerator > 0 && frac1.numerator < std::numeric_limits<int>::min() + frac2.numerator) ||
+            (frac1.numerator > 0 && frac2.numerator < 0 && frac1.numerator > std::numeric_limits<int>::max() + frac2.numerator)) {
+            throw std::overflow_error("Integer overflow in subtraction.");
+        }
+    }
+    else if (operation == '*') {
+        long long product = static_cast<long long>(frac1.numerator) * static_cast<long long>(frac2.numerator);
+        if (product > std::numeric_limits<int>::max() || product < std::numeric_limits<int>::min()) {
+            throw std::overflow_error("Integer overflow in multiplication.");
+        }
+        product = static_cast<long long>(frac1.denominator) * static_cast<long long>(frac2.denominator);
+        if (product > std::numeric_limits<int>::max() || product < std::numeric_limits<int>::min()) {
+            throw std::overflow_error("Integer overflow in multiplication.");
+        }
+    }
+    else if (operation == '/') {
+        if (frac2.numerator == 0) {
+            throw std::runtime_error("Division by zero.");
+        }
+        else if (frac1.numerator == std::numeric_limits<int>::min() && frac2.numerator == -1) {
+            throw std::overflow_error("Integer overflow in division.");
+        }
+    }
+}
+    
+    void Fraction::reduced_form() {
+        int gcd = std::gcd(this->numerator,this->denominator);
+        this->numerator/= gcd;
+        this->denominator/= gcd;
+        if(this->denominator<0){
+            this->numerator *= -1;
+            this->denominator *= -1;
+        }
     }
 
-    // binary with fraction
-    Fraction Fraction::operator+(Fraction other){
-
-        int base = lcm(this->denominator,other.denominator);
-
-        Fraction extended_self = this->extend_to_base(base);
-        Fraction extended_other = other.extend_to_base(base);
-        if (!overflowCheck(extended_self.numerator,extended_other.numerator,"ADD") 
-            ||!overflowCheck(extended_self.denominator,extended_other.denominator,"ADD")){
-                throw overflow_error("");
-            }
-        return Fraction(extended_self.numerator+extended_other.numerator,base).reduced_form();
-    };
-
-    Fraction Fraction::operator-(Fraction other){
-        cout << "this : " << *this <<endl;
-        cout << "other : " << other <<endl;
-        cout << "other.numerator * -1 : " << other.numerator *-1 <<endl;
-        Fraction reduced_other = other.reduced_form();
-        if(this->numerator > 0 &&
-         reduced_other.numerator != 0 &&
-         reduced_other.numerator *-1 == reduced_other.numerator){
-            throw overflow_error("");
-        }
-        return *this + Fraction(-1 * other.numerator,other.denominator);
-    };
-    Fraction Fraction::operator/(Fraction other){
-        if(other.numerator == 0){
+    Fraction operator+ (const Fraction& frac1, const Fraction& frac2) {
+    int lcm = std::lcm(frac1.denominator, frac2.denominator);
+    int sum_num = frac1.numerator * (lcm / frac1.denominator) + frac2.numerator * (lcm / frac2.denominator);
+    check_overflow(frac1, frac2, '+');
+    return Fraction(sum_num, lcm);
+}
+    Fraction operator- (const Fraction& frac1, const Fraction& frac2){
+        check_overflow(frac1, frac2, '-');
+        return frac1 + Fraction(-1 * frac2.numerator,frac2.denominator);
+    }
+    Fraction operator* (const Fraction& frac1, const Fraction& frac2){
+        check_overflow(frac1,frac2,'*');
+        return Fraction(frac1.numerator*frac2.numerator,
+        frac1.denominator*frac2.denominator);
+    }
+    Fraction operator/ (const Fraction& frac1, const Fraction& frac2){
+        if(frac2.numerator == 0){
             throw std::runtime_error("");
         }
-        return *this * Fraction(other.denominator,other.numerator);
-    };
-    Fraction Fraction::operator*(Fraction other){
-        // Fraction sw1= Fraction(other.numerator,this->denominator).reduced_form();
-        // Fraction sw2= Fraction(this->numerator,other.denominator).reduced_form();
-        // return Fraction(sw1.numerator*sw2.numerator, sw1.denominator*sw2.denominator).reduced_form();
-        Fraction reduced_self= this->reduced_form();
-        Fraction reduced_other= other.reduced_form();
-        if (!overflowCheck(reduced_self.numerator,reduced_other.numerator,"MUL") ||
-            !overflowCheck(reduced_self.denominator,reduced_other.denominator,"MUL")){
-            throw overflow_error("");
-        }
-        return Fraction(reduced_self.numerator*reduced_other.numerator,
-        reduced_self.denominator*reduced_other.denominator).reduced_form();
-    };
-
-    //bool fraction
-    bool Fraction::operator>(Fraction other) const{
-        int extended_a = 1000 * ((float)this->numerator/this->denominator);
-        int extended_b = 1000 * ((float)other.numerator/other.denominator);
-        return extended_a > extended_b;
-    };
-    bool Fraction::operator==(Fraction other) const{
-        int extended_a = 1000 * ((float)this->numerator/this->denominator);
-        int extended_b = 1000 * ((float)other.numerator/other.denominator);
-        return extended_a == extended_b;
-    };
-    bool Fraction::operator!=(Fraction other) const{
-        return !(*this==other);
+        return frac1 * Fraction(frac2.denominator,frac2.numerator);
     }
-    bool Fraction::operator<(Fraction other) const{
-        return other > *this;
-    }
-    bool Fraction::operator>=(Fraction other) const{
-        return (*this > other)||(*this == other);
-    };
-    bool Fraction::operator<=(Fraction other) const{
-        return other >= *this;
-    };
-
-    // float opertator Fraction  
-    Fraction operator*(float num_a, Fraction f){return f * num_a;};
-    Fraction operator+(float num_a, Fraction f){return f + num_a;};
-    Fraction operator-(float num_a, Fraction f){
-        cout << f <<endl;
-        cout << "heyyyyyy"<<endl;
-        Fraction minf = f * -1.0;
-        cout << "heyyyyyy"<<endl;
-        return  f*-1 + num_a;
-    };
-    Fraction operator/(float num_a, Fraction f){return Fraction(f.denominator,f.numerator) * num_a;};
-    // bool float
-    bool Fraction::operator<(float other){ return *this<Fraction(other); };
-    bool Fraction::operator>(float other){ return *this>Fraction(other); };
-    bool Fraction::operator<=(float other){ return *this<=Fraction(other); };
-    bool Fraction::operator>=(float other){ return *this>=Fraction(other); };
-    bool Fraction::operator==(float other){return *this==Fraction(other); };
-    bool Fraction::operator!=(float other){return *this!=Fraction(other); };
     
-    // float operator fraction
+    //bool fraction
+    bool operator> (const Fraction& frac1, const Fraction& frac2){
+        int extended_a = 1000 * ((float)frac1.numerator/frac1.denominator);
+        int extended_b = 1000 * ((float)frac2.numerator/frac2.denominator);
+        return extended_a > extended_b;
+    }
+    bool operator< (const Fraction& fraction1, const Fraction& fraction2){
+        return fraction2 > fraction1;
+    }
+    bool operator== (const Fraction& fraction1, const Fraction& fraction2){
+        return !((fraction1>fraction2)||(fraction1<fraction2));
+    }
+    bool operator!= (const Fraction& fraction1, const Fraction& fraction2){
+        return ((fraction1>fraction2)||(fraction1<fraction2));
+    }
+    bool operator>= (const Fraction& fraction1, const Fraction& fraction2){
+        return (fraction1>fraction2||fraction1==fraction2);
+    }
+    bool operator<= (const Fraction& fraction1, const Fraction& fraction2){
+        return (fraction1<fraction2||fraction1==fraction2);
+    }
 
-    bool operator>(float num_a,  Fraction other){ return Fraction(num_a) > other; };
-    bool operator<(float num_a,  Fraction other){ return Fraction(num_a) < other; };
-    bool operator>=(float num_a, Fraction other){ return Fraction(num_a) >= other  ; };
-    bool operator==(float num_a, Fraction other){ return other == Fraction(num_a); };
-    bool operator!=(float num_a, Fraction other){ return other != Fraction(num_a); };
-    bool operator<=(float num_a, Fraction other){ return Fraction(num_a) <= other; };
 
+    //input output
     ostream& operator<<(ostream& osStream, const Fraction& frac){
-        Fraction reduced_f = frac.reduced_form();
-        osStream << reduced_f.numerator <<'/' << reduced_f.denominator;
+        osStream << frac.numerator <<'/' << frac.denominator;
         return osStream;
     };
     
 
     istream& operator>> (istream& inStream, Fraction &frac){
-        int _num, _den;
-        if(inStream.peek() == EOF)
-        {
-            throw std::runtime_error("nother a number error");
+        int numerator, denominator;
+        if (inStream >> numerator >> denominator) {
+            if (denominator == 0) {
+                throw std::runtime_error("Cannot divide by zero.");
+            }
+            frac = Fraction(numerator, denominator);
         }
-        inStream >> _num;
-        if(inStream.peek() == '.'){
-            throw std::runtime_error("floating point error");
+        else {
+            throw std::runtime_error("Failed to read Fraction from input.");
         }
-        if(inStream.peek() == EOF)
-        {
-            throw std::runtime_error("only one number error");
-        }
-        inStream >> _den;
-        if(_den == 0){
-            throw runtime_error("div by zero");
-        }
-        frac = Fraction(_num,_den);
         return inStream;
     };
     // prefix
@@ -200,33 +165,6 @@ namespace ariel{
     void Fraction::setDenominator(int _den){
         this->denominator = _den;
     }
-    bool Fraction::overflowCheck(int num1, int num2, string oper){
-        int max_int = std::numeric_limits<int>::max();
-        int min_int = std::numeric_limits<int>::min();
-        if(oper == "MUL"){
-            int result = num1 * num2;
-            if(result == 0 && (num1 == 0 || num2 == 0))
-                return 1;
-            return (result / num1 == num2);
-        }
-        if(oper == "ADD"){
-
-            int result = num1 + num2;
-            cout << endl << " /////////////////// " <<endl;
-            cout << "result : " << result <<endl;
-            cout << "num1 : " << num1 <<endl;
-            cout << "num2 : " << num2 <<endl;
-            
-            if(num1>=0 && num2>0 && result<0){
-                return 0;
-            }
-            if(num1<0 && num2<0 && result>0){
-                return 0;
-            }
-            return 1;
-        }
-        return 0;
-
-    }
+    
     
 }

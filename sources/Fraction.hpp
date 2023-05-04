@@ -20,40 +20,20 @@ namespace ariel{
             Fraction(int numerator,int denominator);
             Fraction(float float_fraction);
             Fraction();
-            // // cast to float
-            // operator float() const;
-            // binary with fraction
-            Fraction operator+(Fraction other);
-            Fraction operator-(Fraction other);
-            Fraction operator/(Fraction other);
-            Fraction operator*(Fraction other);
-            // bool float
-            bool operator<(float other);
-            bool operator>(float other);
-            bool operator==(float other);
-            bool operator!=(float other);
-            bool operator<=(float other);
-            bool operator>=(float other);
-            //bool fraction
-            bool operator>(Fraction other) const;
-            bool operator<(Fraction other) const;
-            bool operator>=(Fraction other)const;
-            bool operator==(Fraction other)const;
-            bool operator!=(Fraction other)const;
-            bool operator<=(Fraction other)const;
-            // otherher side
-            friend Fraction operator+(float num_a, Fraction frac);
-            friend Fraction operator-(float num_a, Fraction frac);
-            friend Fraction operator*(float num_a, Fraction frac);
-            friend Fraction operator/(float num_a, Fraction frac);
-
-            //bool fraction
-            friend bool operator>(float num_a,  Fraction other);
-            friend bool operator<(float num_a,  Fraction other);
-            friend bool operator>=(float num_a, Fraction other);
-            friend bool operator==(float num_a, Fraction other);
-            friend bool operator!=(float num_a, Fraction other);
-            friend bool operator<=(float num_a, Fraction other);
+            friend void check_overflow(const Fraction& frac1, const Fraction& frac2, char operation);
+            /// arithmetic
+            friend Fraction operator+ (const Fraction& fraction1, const Fraction& fraction2);
+            friend Fraction operator- (const Fraction& fraction1, const Fraction& fraction2);
+            friend Fraction operator* (const Fraction& fraction1, const Fraction& fraction2);
+            friend Fraction operator/ (const Fraction& fraction1, const Fraction& fraction2);
+            // boolean
+            friend bool operator> (const Fraction& fraction1, const Fraction& fraction2);
+            friend bool operator< (const Fraction& fraction1, const Fraction& fraction2);
+            friend bool operator== (const Fraction& fraction1, const Fraction& fraction2);
+            friend bool operator!= (const Fraction& fraction1, const Fraction& fraction2);
+            friend bool operator>= (const Fraction& fraction1, const Fraction& fraction2);
+            friend bool operator<= (const Fraction& fraction1, const Fraction& fraction2);
+            
             friend ostream& operator<<(ostream& osStream, const Fraction& frac);
             
             friend istream& operator>> (istream& isStream, Fraction& frac);
@@ -65,7 +45,7 @@ namespace ariel{
             Fraction operator-- (int);
 
             //help func
-            Fraction reduced_form() const;
+            void reduced_form();
             Fraction extend_to_base(int base) const;
 
             // for tests purpose
@@ -73,7 +53,6 @@ namespace ariel{
             int getDenominator();
             void setNumerator(int _num);
             void setDenominator(int _den);
-            bool overflowCheck(int num1, int num2, string oper);
 
     };
 }
